@@ -103,6 +103,8 @@ void MessageGenerator::Generate(io::Printer* printer) {
       "\")]\n");
   printer->Print(vars, "$access_level$ sealed partial class $class_name$ : ");
 
+ printer->Print("Recyclable, ");
+
   if (has_extension_ranges_) {
     printer->Print(vars, "pb::IExtendableMessage<$class_name$>\n");
   } else {
@@ -118,7 +120,7 @@ void MessageGenerator::Generate(io::Printer* printer) {
   printer->Print(
       vars,
       "private static readonly pb::MessageParser<$class_name$> _parser = new "
-      "pb::MessageParser<$class_name$>(() => new $class_name$());\n");
+      "pb::MessageParser<$class_name$>(() => Pools.Fetch<$class_name$>());\n");
 
   printer->Print("private pb::UnknownFieldSet _unknownFields;\n");
 
