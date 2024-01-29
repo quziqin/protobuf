@@ -36,7 +36,7 @@ namespace Google.Protobuf
         /// Creates a template instance ready for population.
         /// </summary>
         /// <returns>An empty message.</returns>
-        internal IMessage CreateTemplate()
+        public IMessage CreateTemplate()
         {
             return factory();
         }

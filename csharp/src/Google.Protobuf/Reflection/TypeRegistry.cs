@@ -27,7 +27,7 @@ namespace Google.Protobuf.Reflection
 
         private readonly Dictionary<string, MessageDescriptor> fullNameToMessageMap;
 
-        private TypeRegistry(Dictionary<string, MessageDescriptor> fullNameToMessageMap)
+        public TypeRegistry(Dictionary<string, MessageDescriptor> fullNameToMessageMap)
         {
             this.fullNameToMessageMap = fullNameToMessageMap;
         }

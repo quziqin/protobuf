@@ -86,6 +86,8 @@ namespace Google.Protobuf
         public static void MergeDelimitedFrom(this IMessage message, Stream input) =>
             MergeDelimitedFrom(message, input, false, null);
 
+        public static void MergeDelimitedFrom(this IMessage message, CodedInputStream input) => message.MergeDelimitedFrom(input, false);
+
         /// <summary>
         /// Converts the given message into a byte array in protobuf encoding.
         /// </summary>
@@ -113,6 +115,20 @@ namespace Google.Protobuf
             CodedOutputStream codedOutput = new CodedOutputStream(output);
             message.WriteTo(codedOutput);
             codedOutput.Flush();
+        }
+
+        /// <summary>
+        /// Writes the length and then data of the given message to a stream.
+        /// </summary>
+        /// <param name="message">The message to write.</param>
+        /// <param name="output">The output stream to write to.</param>
+        public static void WriteDelimitedTo(this IMessage message, CodedOutputStream output)
+        {
+            ProtoPreconditions.CheckNotNull(message, nameof(message));
+            ProtoPreconditions.CheckNotNull(output, nameof(output));
+            output.WriteLength(message.CalculateSize());
+            message.WriteTo(output);
+            output.Flush();
         }
 
         /// <summary>
@@ -312,6 +328,21 @@ namespace Google.Protobuf
             int size = (int) CodedInputStream.ReadRawVarint32(input);
             Stream limitedStream = new LimitedInputStream(input, size);
             MergeFrom(message, limitedStream, discardUnknownFields, registry);
+        }
+
+        internal static void MergeDelimitedFrom(
+        this IMessage message,
+        CodedInputStream input,
+        bool discardUnknownFields)
+        {
+            ProtoPreconditions.CheckNotNull<IMessage>(message, nameof (message));
+            ProtoPreconditions.CheckNotNull<CodedInputStream>(input, nameof (input));
+            int byteLimit = input.ReadInt32();
+            int oldLimit = input.PushLimit(byteLimit);
+            input.DiscardUnknownFields = discardUnknownFields;
+            message.MergeFrom(input);
+            input.PopLimit(oldLimit);
+            input.CheckReadEndOfStreamTag();
         }
     }
 }
