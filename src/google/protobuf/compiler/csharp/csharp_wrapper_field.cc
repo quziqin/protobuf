@@ -186,6 +186,14 @@ void WrapperFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   printer->Print(");\n");
 }
 
+void WrapperFieldGenerator::GenerateOnFetchCode(io::Printer* printer) {
+
+}
+
+void WrapperFieldGenerator::GenerateOnRecycleCode(io::Printer* printer) {
+  printer->Print(variables_, "$property_name$ = $default_value$;\n");
+}
+
 WrapperOneofFieldGenerator::WrapperOneofFieldGenerator(
     const FieldDescriptor* descriptor, int presenceIndex, const Options *options)
     : WrapperFieldGenerator(descriptor, presenceIndex, options) {

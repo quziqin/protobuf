@@ -103,7 +103,7 @@ void MessageGenerator::Generate(io::Printer* printer) {
       "\")]\n");
   printer->Print(vars, "$access_level$ sealed partial class $class_name$ : ");
 
- printer->Print("Recyclable, ");
+ printer->Print("Proto, ");
 
   if (has_extension_ranges_) {
     printer->Print(vars, "pb::IExtendableMessage<$class_name$>\n");
@@ -359,7 +359,7 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
   absl::flat_hash_map<absl::string_view, std::string> vars;
   WriteGeneratedCodeAttributes(printer);
   vars["class_name"] = class_name();
-  printer->Print(vars, "public $class_name$($class_name$ other) : this() {\n");
+  printer->Print(vars, "public void Clone($class_name$ other) {\n");
   printer->Indent();
   for (int i = 0; i < has_bit_field_count_; i++) {
     printer->Print("_hasBits$i$ = other._hasBits$i$;\n", "i", absl::StrCat(i));
@@ -410,8 +410,15 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
   WriteGeneratedCodeAttributes(printer);
   printer->Print(vars,
                  "public $class_name$ Clone() {\n"
-                 "  return new $class_name$(this);\n"
+                 "  var obj = Pools.Fetch<$class_name$>();\n"
+                 "  obj.Clone(this);\n"
+                 "  return obj;\n"
                  "}\n\n");
+
+  printer->Print(vars,
+                "public override Google.Protobuf.IMessage CloneMsg() {\n"
+                "  return Clone();\n"
+                "}\n\n");
 }
 
 void MessageGenerator::GenerateFreezingCode(io::Printer* printer) {}
@@ -419,6 +426,51 @@ void MessageGenerator::GenerateFreezingCode(io::Printer* printer) {}
 void MessageGenerator::GenerateFrameworkMethods(io::Printer* printer) {
   absl::flat_hash_map<absl::string_view, std::string> vars;
   vars["class_name"] = class_name();
+
+  // iRecycle
+  WriteGeneratedCodeAttributes(printer);
+  printer->Print(
+      "public override void OnFetch() {\n"
+      "}\n\n");
+
+  WriteGeneratedCodeAttributes(printer);
+  printer->Print("public override void OnRecycle() {\n");
+
+  for (int i = 0; i < descriptor_->field_count(); i++) {
+    const FieldDescriptor* field = descriptor_->field(i);
+    if (field->real_containing_oneof()) {
+      continue;
+    }
+    std::unique_ptr<FieldGeneratorBase> generator(
+        CreateFieldGeneratorInternal(field));
+    generator->GenerateOnRecycleCode(printer);
+  }
+
+  // Clone just the right field for each real oneof
+  for (int i = 0; i < descriptor_->real_oneof_decl_count(); ++i) {
+    const OneofDescriptor* oneof = descriptor_->oneof_decl(i);
+    vars["name"] = UnderscoresToCamelCase(oneof->name(), false);
+    vars["property_name"] = UnderscoresToCamelCase(oneof->name(), true);
+    printer->Print(vars, "switch (other.$property_name$Case) {\n");
+    printer->Indent();
+    for (int j = 0; j < oneof->field_count(); j++) {
+      const FieldDescriptor* field = oneof->field(j);
+      std::unique_ptr<FieldGeneratorBase> generator(
+          CreateFieldGeneratorInternal(field));
+      vars["oneof_case_name"] = GetOneofCaseName(field);
+      printer->Print(vars,
+                     "case $property_name$OneofCase.$oneof_case_name$:\n");
+      printer->Indent();
+      generator->GenerateCloningCode(printer);
+      printer->Print("break;\n");
+      printer->Outdent();
+    }
+    printer->Outdent();
+    printer->Print("}\n\n");
+  }
+
+  printer->Outdent();
+  printer->Print("}\n\n");
 
   // Equality
   WriteGeneratedCodeAttributes(printer);

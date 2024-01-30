@@ -97,6 +97,25 @@ void MapFieldGenerator::GenerateSerializedSizeCode(io::Printer* printer) {
     "size += $name$_.CalculateSize(_map_$name$_codec);\n");
 }
 
+void MapFieldGenerator::GenerateOnFetchCode(io::Printer* printer) {
+  
+}
+
+void MapFieldGenerator::GenerateOnRecycleCode(io::Printer* printer) {
+  const FieldDescriptor* value_descriptor = descriptor_->message_type()->map_value();
+  if (value_descriptor->type() == FieldDescriptor::TYPE_MESSAGE) {
+    printer->Print(variables_, "foreach(var kv in $name$_){\n");
+    printer->Indent();
+    printer->Print(variables_, "kv.Value.Release();\n");
+    printer->Outdent();
+    printer->Print(variables_,
+                   "}\n"
+                   "$name$_.Clear();\n");
+  } else {
+    printer->Print(variables_, "$name$_.Clear();\n");
+  }
+}
+
 void MapFieldGenerator::WriteHash(io::Printer* printer) {
   printer->Print(
     variables_,
@@ -114,7 +133,7 @@ void MapFieldGenerator::WriteToString(io::Printer* printer) {
 
 void MapFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
-    "$name$_ = other.$name$_.Clone();\n");
+    "$name$_.Clone(other.$name$_);\n");
 }
 
 void MapFieldGenerator::GenerateFreezingCode(io::Printer* printer) {

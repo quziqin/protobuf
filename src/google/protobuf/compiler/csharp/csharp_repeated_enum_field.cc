@@ -103,7 +103,7 @@ void RepeatedEnumFieldGenerator::WriteToString(io::Printer* printer) {
 
 void RepeatedEnumFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
-    "$name$_ = other.$name$_.Clone();\n");
+    "$name$_.Clone(other.$name$_);\n");
 }
 
 void RepeatedEnumFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
@@ -114,6 +114,14 @@ void RepeatedEnumFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
     "$access_level$ static readonly pb::RepeatedExtension<$extended_type$, $type_name$> $property_name$ =\n"
     "  new pb::RepeatedExtension<$extended_type$, $type_name$>($number$, "
     "pb::FieldCodec.ForEnum($tag$, x => (int) x, x => ($type_name$) x));\n");
+}
+
+void RepeatedEnumFieldGenerator::GenerateOnFetchCode(io::Printer* printer) {
+
+}
+
+void RepeatedEnumFieldGenerator::GenerateOnRecycleCode(io::Printer* printer) {
+  printer->Print(variables_, "$name$_.Clear();\n");
 }
 
 void RepeatedEnumFieldGenerator::GenerateFreezingCode(io::Printer* printer) {

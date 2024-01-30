@@ -120,7 +120,7 @@ void RepeatedMessageFieldGenerator::WriteToString(io::Printer* printer) {
 
 void RepeatedMessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
-    "$name$_ = other.$name$_.Clone();\n");
+    "$name$_.Clone(other.$name$_);\n");
 }
 
 void RepeatedMessageFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -143,6 +143,20 @@ void RepeatedMessageFieldGenerator::GenerateExtensionCode(io::Printer* printer) 
     single_generator->GenerateCodecCode(printer);
   }
   printer->Print(");\n");
+}
+
+void RepeatedMessageFieldGenerator::GenerateOnFetchCode(io::Printer* printer) {
+
+}
+
+void RepeatedMessageFieldGenerator::GenerateOnRecycleCode(io::Printer* printer) {
+  printer->Print(variables_, "for(int i = 0; i < $name$_.Count; i++){\n");
+  printer->Indent();
+  printer->Print(variables_, "$name$_[i].Release();\n");
+  printer->Outdent();
+  printer->Print(variables_,
+                "}\n"
+                "$name$_.Clear();\n");
 }
 
 }  // namespace csharp

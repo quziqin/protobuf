@@ -63,21 +63,20 @@ namespace Google.Protobuf.Collections
         /// </returns>
         public MapField<TKey, TValue> Clone()
         {
-            var clone = new MapField<TKey, TValue>();
-            // Keys are never cloneable. Values might be.
-            if (typeof(IDeepCloneable<TValue>).IsAssignableFrom(typeof(TValue)))
+            MapField<TKey, TValue> mapField = new MapField<TKey, TValue>();
+            mapField.Clone(this);
+            return mapField;
+        }
+
+        public void Clone(MapField<TKey, TValue> from)
+        {
+            if (typeof (IDeepCloneable<TValue>).IsAssignableFrom(typeof (TValue)))
             {
-                foreach (var pair in list)
-                {
-                    clone.Add(pair.Key, ((IDeepCloneable<TValue>)pair.Value).Clone());
-                }
+                foreach (KeyValuePair<TKey, TValue> keyValuePair in from.list)
+                this.Add(keyValuePair.Key, ((IDeepCloneable<TValue>) (object) keyValuePair.Value).Clone());
             }
             else
-            {
-                // Nothing is cloneable, so we don't need to worry.
-                clone.Add(this);
-            }
-            return clone;
+                this.Add((IDictionary<TKey, TValue>) from);
         }
 
         /// <summary>

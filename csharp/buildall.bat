@@ -1,6 +1,6 @@
 @rem Builds Google.Protobuf and runs the tests
 
-dotnet build src/Google.Protobuf.sln || goto :error
+dotnet pack --no-restore -c Release src/Google.Protobuf.sln -p:ContinuousIntegrationBuild=true
 
 echo Running tests.
 

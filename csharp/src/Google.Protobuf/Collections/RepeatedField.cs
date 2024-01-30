@@ -50,20 +50,24 @@ namespace Google.Protobuf.Collections
         /// <returns>A deep clone of this repeated field.</returns>
         public RepeatedField<T> Clone()
         {
-            RepeatedField<T> clone = new RepeatedField<T>();
-            if (array != EmptyArray)
+            RepeatedField<T> repeatedField = new RepeatedField<T>();
+            repeatedField.Clone(this);
+            return repeatedField;
+        }
+
+        public void Clone(RepeatedField<T> from)
+        {
+            this.count = from.count;
+            if (from.array != RepeatedField<T>.EmptyArray)
             {
-                clone.array = (T[])array.Clone();
-                if (clone.array is IDeepCloneable<T>[] cloneableArray)
-                {
-                    for (int i = 0; i < count; i++)
-                    {
-                        clone.array[i] = cloneableArray[i].Clone();
-                    }
-                }
+                this.array = (T[]) from.array.Clone();
+                if (!(from.array is IDeepCloneable<T>[] array))
+                return;
+                for (int index = 0; index < this.count; ++index)
+                this.array[index] = array[index].Clone();
             }
-            clone.count = count;
-            return clone;
+            else
+                this.array = RepeatedField<T>.EmptyArray;
         }
 
         /// <summary>

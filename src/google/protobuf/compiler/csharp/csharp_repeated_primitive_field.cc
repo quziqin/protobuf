@@ -101,7 +101,7 @@ void RepeatedPrimitiveFieldGenerator::WriteToString(io::Printer* printer) {
 
 void RepeatedPrimitiveFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
-    "$name$_ = other.$name$_.Clone();\n");
+    "$name$_.Clone(other.$name$_);\n");
 }
 
 void RepeatedPrimitiveFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -114,6 +114,14 @@ void RepeatedPrimitiveFieldGenerator::GenerateExtensionCode(io::Printer* printer
     variables_,
     "$access_level$ static readonly pb::RepeatedExtension<$extended_type$, $type_name$> $property_name$ =\n"
     "  new pb::RepeatedExtension<$extended_type$, $type_name$>($number$, pb::FieldCodec.For$capitalized_type_name$($tag$));\n");
+}
+
+void RepeatedPrimitiveFieldGenerator::GenerateOnFetchCode(io::Printer* printer) {
+
+}
+
+void RepeatedPrimitiveFieldGenerator::GenerateOnRecycleCode(io::Printer* printer) {
+  printer->Print(variables_, "$name$_.Clear();\n");
 }
 
 }  // namespace csharp
