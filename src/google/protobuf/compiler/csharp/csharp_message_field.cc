@@ -158,8 +158,24 @@ void MessageFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   printer->Print(");\n");
 }
 void MessageFieldGenerator::GenerateCloningCode(io::Printer* printer) {
-  printer->Print(variables_,
-    "$name$_ = other.$has_property_check$ ? other.$name$_.Clone() : null;\n");
+  printer->Print(variables_, "if( $name$_ != null ){\n");
+  printer->Indent();
+  printer->Print(variables_, "if( other.$has_property_check$ ){\n");
+  printer->Indent();
+  printer->Print(variables_, "$name$_.Clone(other.$name$_);\n");
+  printer->Outdent();
+  printer->Print(variables_, "} else {\n");
+  printer->Indent();
+  printer->Print(variables_, "$name$_.Release();\n");
+  printer->Print(variables_,"$name$_ = null;\n");
+  printer->Outdent();
+  printer->Print(variables_, "}\n");
+  printer->Outdent();
+  printer->Print(variables_, "} else {\n");
+  printer->Indent();
+  printer->Print(variables_,"$name$_ = other.$has_property_check$ ? other.$name$_.Clone() : null;\n");
+  printer->Outdent();
+  printer->Print(variables_, "}\n\n");
 }
 
 void MessageFieldGenerator::GenerateFreezingCode(io::Printer* printer) {
@@ -182,10 +198,12 @@ void MessageFieldGenerator::GenerateOnFetchCode(io::Printer* printer) {
 }
 
 void MessageFieldGenerator::GenerateOnRecycleCode(io::Printer* printer) {
-  printer->Print(
-      variables_,
-      "$name$_.Release();\n"
-       "$name$_ = null;\n");
+  printer->Print(variables_, "if( $name$_ != null){\n");
+  printer->Indent();
+  printer->Print(variables_, "$name$_.Release();\n");
+  printer->Outdent();
+  printer->Print(variables_, "}\n"
+                              "$name$_ = null;\n");
 }
 
 MessageOneofFieldGenerator::MessageOneofFieldGenerator(
